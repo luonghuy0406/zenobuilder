@@ -3,7 +3,7 @@ import {
   } from "./constants";
   
   let initState = {
-    questions: {},
+    elements: [],
   };
   
   export function rootReducer(state = initState, action) {
@@ -11,6 +11,8 @@ import {
     try {
       switch (action.type) {
         case ADD_QUESTION:
+          newState['elements'].splice(action.desIndex, 0, {type:action.typeElement});
+          console.log('acccc',newState)
           
           break;
   

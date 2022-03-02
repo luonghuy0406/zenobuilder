@@ -1,32 +1,23 @@
 import './App.css';
 import { connect, useDispatch, useSelector } from "react-redux";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { makeStyles } from '@material-ui/core/styles';
 import {
-  Box,
   Button,
   Card,
-  CardActions,
   CardContent,
-  Container,
-  Divider,
-  Drawer,
-  FormControlLabel,
   Grid,
-  Icon,
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Switch,
   Tab,
   Tabs,
-  Typography,
   
 } from "@material-ui/core";
 import DeleteIcon from '@material-ui/icons/Delete';
+import {
+  addNewQuestion,
+} from "./actions";
+import TextElement from './components/TextElement';
+import SelectOneElement from './components/SelectOneElement';
 
 const useStyles = makeStyles((theme) => ({
   first_nav: {
@@ -67,6 +58,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
 function a11yProps(index) {
   return {
     id: `simple-tab-${index}`,
@@ -74,16 +66,40 @@ function a11yProps(index) {
   };
 }
 
-function App() {
+function App(props) {
+  console.log('prosp',props)
   const [spacing, setSpacing] = React.useState(2);
   const classes = useStyles();
-
-  const handleChange = (event) => {
-    setSpacing(Number(event.target.value));
-  };
+  const dispatch = useDispatch();
+  // using useCallback is optional
+  const onBeforeCapture = useCallback((e) => {
+    console.log('>>>>>>>>onBeforeCapture',e)
+  }, []);
+  const onBeforeDragStart = useCallback((e) => {
+    // console.log('>>>>>>>>onBeforeDragStart',e)
+  }, []);
+  const onDragStart = useCallback((e) => {
+    // console.log('>>>>>>>>onDragStart',e)
+  }, []);
+  const onDragUpdate = useCallback((e) => {
+    // console.log('>>>>>>>>onDragUpdate',e)
+  }, []);
+  const onDragEnd = useCallback((result) => {
+    if(result.source.droppableId == "droppable-element" && result.destination.droppableId == "droppable-workspace" ){
+      dispatch(addNewQuestion(result.draggableId,result.destination.index));
+      console.log(result);
+    }
+    
+  }, []);
   return (
     <div className="App">
-      <DragDropContext>
+      <DragDropContext
+        onBeforeCapture={onBeforeCapture}
+        onBeforeDragStart={onBeforeDragStart}
+        onDragStart={onDragStart}
+        onDragUpdate={onDragUpdate}
+        onDragEnd={onDragEnd}
+      >
         <Grid
           container
           justifyContent="space-between"
@@ -134,7 +150,40 @@ function App() {
               <Grid item lg={12} md={12} xs>
                 <Card className={classes.form_page2}>
                   
-                  sdsadsa
+                <Droppable droppableId="droppable-element" isDropDisabled>
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef}>
+                  <Draggable draggableId={"Text"} index={1}>
+                    {(provided, snapshot) => {
+                      return (
+                        <div
+                          ref={provided.innerRef}
+                          snapshot={snapshot}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          <span>Text</span>
+                        </div>
+                      );
+                    }}
+                  </Draggable>
+                  <Draggable draggableId={"Select-one"} index={2}>
+                    {(provided, snapshot) => {
+                      return (
+                        <div
+                          ref={provided.innerRef}
+                          snapshot={snapshot}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          <span>Select one</span>
+                        </div>
+                      );
+                    }}
+                  </Draggable>
+                </div>
+              )}
+            </Droppable>
                 </Card>
               </Grid>
             </Card>
@@ -144,7 +193,37 @@ function App() {
             <Card className={classes.form_page}>
                 
               <CardContent>
-                2222
+              <Droppable droppableId="droppable-workspace">
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef}>
+                  {
+                    props.elements.map((el,index) =>{
+                      
+                      if(el.type =="Select-one"){
+                        return(
+                          <SelectOneElement
+                            key = {"key-"+index}
+                            id={"id-"+index}
+                            index={index}
+                          />
+                        )
+                      }
+                      return(
+                        <TextElement
+                          key = {"key-"+index}
+                          id={"id-"+index}
+                          index={index}
+                        />
+                      )
+                      
+                      
+                    })
+                  }
+                    
+                </div>
+              )}
+            </Droppable>
+              
               </CardContent>
             </Card>
             {/* </Droppable> */}
@@ -158,5 +237,10 @@ function App() {
     </div>
   );
 }
+const mapStateToProps = (state) => {
+  return {
+    ...state,
+  };
+};
 
-export default App;
+export default connect(mapStateToProps)(App);
